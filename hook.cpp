@@ -256,7 +256,7 @@ namespace k_hook
 		*   靠,Win11的偏移变成了0x18,看漏的害我调试这么久  -_-
 		*   这里总结一下,Win7和Win11都是偏移0x18,其它的是0x28
 		*/
-		if (g_build_number <= 7601 || g_build_number == 22000) g_GetCpuClock = (void**)((unsigned long long)g_CkclWmiLoggerContext + 0x18); // Win7版本以及更旧, Win11也是
+		if (g_build_number <= 7601 || g_build_number == 22000 || g_build_number == 22621) g_GetCpuClock = (void**)((unsigned long long)g_CkclWmiLoggerContext + 0x18); // Win7版本以及更旧, Win11也是
 		else g_GetCpuClock = (void**)((unsigned long long)g_CkclWmiLoggerContext + 0x28); // Win8 -> Win10全系统
 		if (!MmIsAddressValid(g_GetCpuClock)) return false;
 		DbgPrintEx(0, 0, "[%s] get cpu clock is 0x%p \n", __FUNCTION__, *g_GetCpuClock);
@@ -285,6 +285,13 @@ namespace k_hook
 			address = k_utils::find_pattern_image(ntoskrnl,
 				"\x48\x8b\x05\x00\x00\x00\x00\x48\x85\xc0\x74\x00\x48\x83\x3d\x00\x00\x00\x00\x00\x74",
 				"xxx????xxxx?xxx?????x");
+			DbgPrintEx(0, 0, "[%s] hvl get qpc bias is 0x%llX \n", __FUNCTION__, address);
+			if (!address)
+			{
+				address = k_utils::find_pattern_image(ntoskrnl,
+					"\x48\x8b\x05\x00\x00\x00\x00\xe8\x00\x00\x00\x00\x48\x03\xd8\x48\x89\x1f",
+					"xxx????x????xxxxxx");
+			}
 			if (!address) return false;
 			g_HvlGetQpcBias = reinterpret_cast<unsigned long long>(reinterpret_cast<char*>(address) + 7 + *reinterpret_cast<int*>(reinterpret_cast<char*>(address) + 3));
 			if (!g_HvlGetQpcBias) return false;
